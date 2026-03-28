@@ -1,0 +1,176 @@
+<app-layout>
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Frota</h1>
+      <p class="page-sub">Motoristas, veículos e empresas transportadoras</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs-bar">
+    <button class="tab" [class.active]="aba==='motoristas'" (click)="aba='motoristas'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+      Motoristas ({{ motoristas.length }})
+    </button>
+    <button class="tab" [class.active]="aba==='veiculos'" (click)="aba='veiculos'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="m16 8 5 0 2 4 1 5H16V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      Veículos ({{ veiculos.length }})
+    </button>
+    <button class="tab" [class.active]="aba==='empresas'" (click)="aba='empresas'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      Empresas ({{ empresas.length }})
+    </button>
+  </div>
+
+  <div class="loading-center" *ngIf="carregando"><div class="spinner"></div></div>
+
+  <!-- ── MOTORISTAS ── -->
+  <div *ngIf="aba==='motoristas' && !carregando">
+    <div class="section-head">
+      <span></span>
+      <button class="btn btn-primary btn-sm" (click)="abrirModal('motorista')">+ Novo Motorista</button>
+    </div>
+    <div class="cards-grid">
+      <div class="person-card" *ngFor="let m of motoristas">
+        <div class="person-avatar" [style.background]="randomColor(m.id)">{{ iniciais(m.nome) }}</div>
+        <div class="person-info">
+          <div class="person-name">{{ m.nome }}</div>
+          <div class="person-sub" *ngIf="m.cnh">CNH: {{ m.cnh }}</div>
+          <div class="person-sub" *ngIf="m.telefone">📞 {{ m.telefone }}</div>
+        </div>
+        <div class="person-actions">
+          <button class="btn btn-ghost btn-icon btn-sm" (click)="editarItem('motorista', m)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn btn-danger btn-icon btn-sm" (click)="deletarItem('motoristas', m.id)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="empty-state" *ngIf="!motoristas.length">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+        <p>Nenhum motorista cadastrado</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VEÍCULOS ── -->
+  <div *ngIf="aba==='veiculos' && !carregando">
+    <div class="section-head">
+      <span></span>
+      <button class="btn btn-primary btn-sm" (click)="abrirModal('veiculo')">+ Novo Veículo</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Placa</th><th>Modelo</th><th>Tipo</th><th>Ano</th><th style="width:80px">Ações</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let v of veiculos">
+            <td><span class="mono" style="color:var(--blue-light)">{{ v.placa }}</span></td>
+            <td>{{ v.modelo || '—' }}</td>
+            <td>{{ v.tipo || '—' }}</td>
+            <td>{{ v.ano || '—' }}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-ghost btn-icon btn-sm" (click)="editarItem('veiculo', v)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn btn-danger btn-icon btn-sm" (click)="deletarItem('veiculos', v.id)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="!veiculos.length">
+        <p>Nenhum veículo cadastrado</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EMPRESAS ── -->
+  <div *ngIf="aba==='empresas' && !carregando">
+    <div class="section-head">
+      <span></span>
+      <button class="btn btn-primary btn-sm" (click)="abrirModal('empresa')">+ Nova Empresa</button>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Razão Social</th><th>CNPJ</th><th>Cidade</th><th>UF</th><th style="width:80px">Ações</th></tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of empresas">
+            <td>{{ e.razao_social }}</td>
+            <td><span class="mono">{{ e.cnpj || '—' }}</span></td>
+            <td>{{ e.cidade || '—' }}</td>
+            <td>{{ e.uf || '—' }}</td>
+            <td>
+              <div class="row-actions">
+                <button class="btn btn-ghost btn-icon btn-sm" (click)="editarItem('empresa', e)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn btn-danger btn-icon btn-sm" (click)="deletarItem('empresas', e.id)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="!empresas.length"><p>Nenhuma empresa cadastrada</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal dinâmico -->
+<div class="modal-overlay" *ngIf="modalAberto" (click)="fecharModal($event)">
+  <div class="modal-box" style="max-width:520px" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h3>{{ modalTitulo }}</h3>
+      <button class="btn btn-ghost btn-icon btn-sm" (click)="fecharModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <!-- Motorista -->
+    <div class="modal-body" *ngIf="modalTipo==='motorista'">
+      <div><label class="label">Nome *</label><input class="input" [(ngModel)]="form['nome']" placeholder="Nome completo"/></div>
+      <div class="grid-2">
+        <div><label class="label">CPF</label><input class="input" [(ngModel)]="form['cpf']" placeholder="000.000.000-00"/></div>
+        <div><label class="label">CNH</label><input class="input" [(ngModel)]="form['cnh']" placeholder="Nº CNH"/></div>
+      </div>
+      <div><label class="label">Telefone</label><input class="input" [(ngModel)]="form['telefone']" placeholder="(27) 99999-9999"/></div>
+    </div>
+    <!-- Veículo -->
+    <div class="modal-body" *ngIf="modalTipo==='veiculo'">
+      <div class="grid-2">
+        <div><label class="label">Placa *</label><input class="input" [(ngModel)]="form['placa']" placeholder="ABC-1234"/></div>
+        <div><label class="label">Tipo</label><input class="input" [(ngModel)]="form['tipo']" placeholder="Truck, Carreta…"/></div>
+      </div>
+      <div class="grid-2">
+        <div><label class="label">Modelo</label><input class="input" [(ngModel)]="form['modelo']" placeholder="Mercedes Atego"/></div>
+        <div><label class="label">Ano</label><input class="input" type="number" [(ngModel)]="form['ano']" placeholder="2022"/></div>
+      </div>
+    </div>
+    <!-- Empresa -->
+    <div class="modal-body" *ngIf="modalTipo==='empresa'">
+      <div><label class="label">Razão Social *</label><input class="input" [(ngModel)]="form['razao_social']" placeholder="Nome da empresa"/></div>
+      <div class="grid-2">
+        <div><label class="label">CNPJ</label><input class="input" [(ngModel)]="form['cnpj']" placeholder="00.000.000/0000-00"/></div>
+        <div><label class="label">UF</label><input class="input" [(ngModel)]="form['uf']" placeholder="ES" maxlength="2"/></div>
+      </div>
+      <div><label class="label">Cidade</label><input class="input" [(ngModel)]="form['cidade']" placeholder="Vitória"/></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" (click)="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="salvar()" [disabled]="salvando">
+        <div class="spinner" *ngIf="salvando"></div>
+        <span *ngIf="!salvando">Salvar</span>
+      </button>
+    </div>
+  </div>
+</div>
+</app-layout>

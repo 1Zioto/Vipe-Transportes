@@ -1,0 +1,120 @@
+<app-layout>
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">CTEs</h1>
+      <p class="page-sub">Controle de Conhecimento de Transporte Eletrônico</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Novo CTE
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-bar">
+    <button class="filter-chip" [class.active]="filtro===''" (click)="filtro=''">Todos</button>
+    <button class="filter-chip" [class.active]="filtro==='pendente'" (click)="filtro='pendente'">Pendentes</button>
+    <button class="filter-chip" [class.active]="filtro==='aprovado'" (click)="filtro='aprovado'">Aprovados</button>
+    <button class="filter-chip" [class.active]="filtro==='cancelado'" (click)="filtro='cancelado'">Cancelados</button>
+  </div>
+
+  <div class="loading-center" *ngIf="carregando"><div class="spinner"></div></div>
+
+  <div class="tbl-wrap" *ngIf="!carregando">
+    <table>
+      <thead>
+        <tr>
+          <th>Nº CTE</th>
+          <th>Embarque</th>
+          <th>Empresa</th>
+          <th>Valor</th>
+          <th>Data Emissão</th>
+          <th>Status</th>
+          <th style="width:120px">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filtradas">
+          <td><span class="mono" style="font-size:13px;color:var(--cyan)">{{ c.numero_cte }}</span></td>
+          <td>{{ c.embarque_booking || '—' }}</td>
+          <td>{{ c.empresa_nome || '—' }}</td>
+          <td>{{ c.valor ? (c.valor | currency:'BRL':'symbol':'1.2-2':'pt') : '—' }}</td>
+          <td>{{ c.data_emissao | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <span class="badge" [ngClass]="statusCTE(c.status)">{{ c.status }}</span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="btn btn-ghost btn-sm" (click)="aprovar(c)" *ngIf="c.status==='pendente'" style="font-size:12px">✓ Aprovar</button>
+              <button class="btn btn-ghost btn-icon btn-sm" (click)="editar(c)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="btn btn-danger btn-icon btn-sm" (click)="deletar(c)">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="empty-state" *ngIf="!filtradas.length">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <p>Nenhum CTE encontrado</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal CTE -->
+<div class="modal-overlay" *ngIf="modalAberto" (click)="fecharModal($event)">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h3>{{ selecionado ? 'Editar CTE' : 'Novo CTE' }}</h3>
+      <button class="btn btn-ghost btn-icon btn-sm" (click)="fecharModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2">
+        <div><label class="label">Número CTE *</label><input class="input" [(ngModel)]="form.numero_cte" placeholder="CTE-00001"/></div>
+        <div>
+          <label class="label">Status</label>
+          <select class="input" [(ngModel)]="form.status">
+            <option value="pendente">Pendente</option>
+            <option value="aprovado">Aprovado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <label class="label">Embarque</label>
+          <select class="input" [(ngModel)]="form.embarque_id">
+            <option [ngValue]="null">Sem vínculo</option>
+            <option *ngFor="let e of embarques" [ngValue]="e.id">{{ e.booking }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Empresa Transportadora</label>
+          <select class="input" [(ngModel)]="form.empresa_id">
+            <option [ngValue]="null">Selecione...</option>
+            <option *ngFor="let e of empresas" [ngValue]="e.id">{{ e.razao_social }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div><label class="label">Valor (R$)</label><input class="input" type="number" step="0.01" [(ngModel)]="form.valor" placeholder="0,00"/></div>
+        <div><label class="label">Data de Emissão</label><input class="input" type="date" [(ngModel)]="form.data_emissao"/></div>
+      </div>
+      <div><label class="label">Observações</label><textarea class="input" [(ngModel)]="form.observacoes" rows="3" style="resize:vertical" placeholder="Observações adicionais…"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" (click)="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="salvar()" [disabled]="salvando">
+        <div class="spinner" *ngIf="salvando"></div>
+        <span *ngIf="!salvando">{{ selecionado ? 'Salvar' : 'Criar CTE' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+</app-layout>
