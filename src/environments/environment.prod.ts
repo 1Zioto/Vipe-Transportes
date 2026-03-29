@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://98.80.70.12:3000'
+  apiUrl: 'https://heat-robots-painted-viruses.trycloudflare.com'
 };
