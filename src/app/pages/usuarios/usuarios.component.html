@@ -1,0 +1,139 @@
+<app-layout>
+<div class="page-wrap">
+
+  <!-- Cabeçalho -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Usuários & Acessos</h1>
+      <p class="page-sub">Gerencie usuários e permissões por módulo</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Novo Usuário
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-center" *ngIf="carregando"><div class="spinner"></div></div>
+
+  <!-- Tabela de usuários -->
+  <div *ngIf="!carregando">
+    <div class="users-grid">
+      <div class="user-card" *ngFor="let u of usuarios">
+        <!-- Cabeçalho do card -->
+        <div class="uc-header">
+          <div class="uc-avatar" [style.background]="avatarColor(u.id)">
+            {{ iniciais(u.nome) }}
+          </div>
+          <div class="uc-info">
+            <div class="uc-nome">{{ u.nome }}</div>
+            <div class="uc-email">{{ u.email }}</div>
+            <span class="badge" [ngClass]="cargoBadge(u.cargo)">{{ u.cargo }}</span>
+          </div>
+          <div class="uc-actions">
+            <span class="status-dot" [class.ativo]="u.ativo" [title]="u.ativo ? 'Ativo' : 'Inativo'"></span>
+            <button class="btn btn-ghost btn-icon btn-sm" (click)="editar(u)" title="Editar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button class="btn btn-danger btn-icon btn-sm" (click)="desativar(u)" title="Desativar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabela de permissões -->
+        <div class="perm-table">
+          <div class="perm-header">
+            <span>Módulo</span>
+            <span>Sem acesso</span>
+            <span>Consulta</span>
+            <span>Leitura/Escrita</span>
+          </div>
+          <div class="perm-row" *ngFor="let modulo of modulos">
+            <span class="perm-modulo">
+              <span class="perm-icon">{{ modulo.icon }}</span>
+              {{ modulo.label }}
+            </span>
+            <span class="perm-opt">
+              <input type="radio"
+                [name]="'perm_' + u.id + '_' + modulo.key"
+                [value]="'none'"
+                [checked]="getPerm(u, modulo.key) === 'none'"
+                (change)="setPerm(u, modulo.key, 'none')"
+              />
+            </span>
+            <span class="perm-opt">
+              <input type="radio"
+                [name]="'perm_' + u.id + '_' + modulo.key"
+                [value]="'read'"
+                [checked]="getPerm(u, modulo.key) === 'read'"
+                (change)="setPerm(u, modulo.key, 'read')"
+              />
+            </span>
+            <span class="perm-opt">
+              <input type="radio"
+                [name]="'perm_' + u.id + '_' + modulo.key"
+                [value]="'write'"
+                [checked]="getPerm(u, modulo.key) === 'write'"
+                (change)="setPerm(u, modulo.key, 'write')"
+              />
+            </span>
+          </div>
+        </div>
+
+        <!-- Salvar permissões -->
+        <div class="perm-footer">
+          <button class="btn btn-primary btn-sm" (click)="salvarPermissoes(u)" [disabled]="salvandoPerm === u.id">
+            <div class="spinner" *ngIf="salvandoPerm === u.id" style="width:14px;height:14px;border-width:2px"></div>
+            <span *ngIf="salvandoPerm !== u.id">Salvar permissões</span>
+          </button>
+          <span class="saved-msg" *ngIf="savedMsg === u.id">✓ Salvo!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal novo/editar usuário -->
+<div class="modal-overlay" *ngIf="modalAberto" (click)="fecharModal($event)">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h3>{{ selecionado ? 'Editar Usuário' : 'Novo Usuário' }}</h3>
+      <button class="btn btn-ghost btn-icon btn-sm" (click)="fecharModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2">
+        <div><label class="label">Nome completo *</label><input class="input" [(ngModel)]="form.nome" placeholder="Nome do usuário"/></div>
+        <div>
+          <label class="label">Cargo / Perfil</label>
+          <select class="input" [(ngModel)]="form.cargo">
+            <option value="Administrador">Administrador</option>
+            <option value="Operador">Operador</option>
+            <option value="Consultor">Consultor</option>
+            <option value="Financeiro">Financeiro</option>
+            <option value="Motorista">Motorista</option>
+          </select>
+        </div>
+      </div>
+      <div><label class="label">E-mail *</label><input class="input" type="email" [(ngModel)]="form.email" placeholder="email@empresa.com.br"/></div>
+      <div>
+        <label class="label">{{ selecionado ? 'Nova senha (deixe em branco para manter)' : 'Senha *' }}</label>
+        <input class="input" type="password" [(ngModel)]="form.senha" placeholder="••••••••"/>
+      </div>
+      <div class="erro-box" *ngIf="erro">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+        {{ erro }}
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" (click)="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="salvar()" [disabled]="salvando">
+        <div class="spinner" *ngIf="salvando"></div>
+        <span *ngIf="!salvando">{{ selecionado ? 'Salvar' : 'Criar usuário' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+</app-layout>

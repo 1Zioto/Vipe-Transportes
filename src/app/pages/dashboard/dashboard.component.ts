@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { ApiService, Embarque, Tarefa, Stats } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { LayoutComponent } from '../../components/layout/layout.component';
@@ -21,7 +21,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ultimaAtualizacao = '';
   private sub?: Subscription;
 
-  constructor(private api: ApiService, private auth: AuthService) {}
+  constructor(private api: ApiService, private auth: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     this.carregar();
@@ -32,14 +32,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   carregar(silencioso = false): void {
     if (!silencioso) this.carregando = true;
     forkJoin({
-      stats:    this.api.stats(),
+      stats:     this.api.stats(),
       embarques: this.api.listarEmbarques(),
-      tarefas:  this.api.listarTarefas()
+      tarefas:   this.api.listarTarefas()
     }).subscribe({
       next: ({ stats, embarques, tarefas }) => {
         this.stats = stats;
-        this.embarquesRecentes = embarques.slice(0, 6);
-        this.tarefasUrgentes = tarefas.filter(t => t.status !== 'concluida' && t.status !== 'cancelada').slice(0, 6);
+        this.embarquesRecentes = embarques.slice(0, 7);
+        this.tarefasUrgentes = tarefas
+          .filter(t => t.status !== 'concluida' && t.status !== 'cancelada')
+          .slice(0, 7);
         this.carregando = false;
         this.ultimaAtualizacao = new Date().toLocaleTimeString('pt-BR');
       },
@@ -47,13 +49,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  statusBadge(status?: string): string {
-    const map: Record<string,string> = {
-      'Pendente':'badge-pendente','Agendado':'badge-agendado',
-      'Em Coleta':'badge-coleta','Em Transporte':'badge-transporte',
-      'Entregue':'badge-entregue','Cancelado':'badge-cancelado',
+  pct(val: number): number {
+    return this.stats.total ? Math.round(val / this.stats.total * 100) : 0;
+  }
+
+  irPara(rota: string): void { this.router.navigate([rota]); }
+
+  statusBadge(s?: string): string {
+    const m: Record<string,string> = {
+      'Pendente':'badge-pendente','Agendado':'badge-agendado','Em Coleta':'badge-coleta',
+      'Em Transporte':'badge-transporte','Entregue':'badge-entregue','Cancelado':'badge-cancelado'
     };
-    return map[status||''] || 'badge-pendente';
+    return m[s||''] || 'badge-pendente';
+  }
+
+  statusDotClass(s?: string): string {
+    const m: Record<string,string> = {
+      'Pendente':'dot-pendente','Agendado':'dot-agendado','Em Coleta':'dot-coleta',
+      'Em Transporte':'dot-transporte','Entregue':'dot-entregue','Cancelado':'dot-cancelado'
+    };
+    return m[s||''] || 'dot-pendente';
   }
 
   get saudacao(): string {
@@ -65,5 +80,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   get nomeUsuario(): string {
     return this.auth.usuarioLogado()?.nome?.split(' ')[0] || 'usuário';
+  }
+
+  get dataHoje(): string {
+    return new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   }
 }

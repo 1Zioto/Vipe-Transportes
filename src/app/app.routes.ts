@@ -28,6 +28,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'usuarios',
+    loadComponent: () => import('./pages/usuarios/usuarios.component').then(m => m.UsuariosComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'frota',
     loadComponent: () => import('./pages/frota/frota.component').then(m => m.FrotaComponent),
     canActivate: [authGuard]
