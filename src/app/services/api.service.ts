@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -56,36 +56,32 @@ export class ApiService {
   private readonly BASE = environment.apiUrl;
   constructor(private http: HttpClient) {}
 
-  private h(): HttpHeaders {
-    return new HttpHeaders({ Authorization: `Bearer ${localStorage.getItem('vipe_token')||''}` });
-  }
-
   // Stats
-  stats(): Observable<Stats> { return this.http.get<Stats>(`${this.BASE}/stats`, { headers: this.h() }); }
+  stats(): Observable<Stats> { return this.http.get<Stats>(`${this.BASE}/stats`); }
 
   // Embarques
-  listarEmbarques(): Observable<Embarque[]> { return this.http.get<Embarque[]>(`${this.BASE}/embarques`, { headers: this.h() }); }
-  salvarEmbarque(e: Embarque): Observable<Embarque> { return this.http.post<Embarque>(`${this.BASE}/embarques`, e, { headers: this.h() }); }
-  atualizarEmbarque(id: number, e: Embarque): Observable<Embarque> { return this.http.put<Embarque>(`${this.BASE}/embarques/${id}`, e, { headers: this.h() }); }
-  deletarEmbarque(id: number): Observable<any> { return this.http.delete(`${this.BASE}/embarques/${id}`, { headers: this.h() }); }
+  listarEmbarques(): Observable<Embarque[]> { return this.http.get<Embarque[]>(`${this.BASE}/embarques`); }
+  salvarEmbarque(e: Embarque): Observable<Embarque> { return this.http.post<Embarque>(`${this.BASE}/embarques`, e); }
+  atualizarEmbarque(id: number, e: Embarque): Observable<Embarque> { return this.http.put<Embarque>(`${this.BASE}/embarques/${id}`, e); }
+  deletarEmbarque(id: number): Observable<any> { return this.http.delete(`${this.BASE}/embarques/${id}`); }
 
   // Tarefas
-  listarTarefas(): Observable<Tarefa[]> { return this.http.get<Tarefa[]>(`${this.BASE}/tarefas`, { headers: this.h() }); }
-  salvarTarefa(t: Tarefa): Observable<Tarefa> { return this.http.post<Tarefa>(`${this.BASE}/tarefas`, t, { headers: this.h() }); }
-  atualizarTarefa(id: number, t: Tarefa): Observable<Tarefa> { return this.http.put<Tarefa>(`${this.BASE}/tarefas/${id}`, t, { headers: this.h() }); }
-  deletarTarefa(id: number): Observable<any> { return this.http.delete(`${this.BASE}/tarefas/${id}`, { headers: this.h() }); }
+  listarTarefas(): Observable<Tarefa[]> { return this.http.get<Tarefa[]>(`${this.BASE}/tarefas`); }
+  salvarTarefa(t: Tarefa): Observable<Tarefa> { return this.http.post<Tarefa>(`${this.BASE}/tarefas`, t); }
+  atualizarTarefa(id: number, t: Tarefa): Observable<Tarefa> { return this.http.put<Tarefa>(`${this.BASE}/tarefas/${id}`, t); }
+  deletarTarefa(id: number): Observable<any> { return this.http.delete(`${this.BASE}/tarefas/${id}`); }
 
   // CTEs
-  listarCTEs(): Observable<CTE[]> { return this.http.get<CTE[]>(`${this.BASE}/ctes`, { headers: this.h() }); }
-  salvarCTE(c: CTE): Observable<CTE> { return this.http.post<CTE>(`${this.BASE}/ctes`, c, { headers: this.h() }); }
-  atualizarCTE(id: number, c: CTE): Observable<CTE> { return this.http.put<CTE>(`${this.BASE}/ctes/${id}`, c, { headers: this.h() }); }
-  deletarCTE(id: number): Observable<any> { return this.http.delete(`${this.BASE}/ctes/${id}`, { headers: this.h() }); }
+  listarCTEs(): Observable<CTE[]> { return this.http.get<CTE[]>(`${this.BASE}/ctes`); }
+  salvarCTE(c: CTE): Observable<CTE> { return this.http.post<CTE>(`${this.BASE}/ctes`, c); }
+  atualizarCTE(id: number, c: CTE): Observable<CTE> { return this.http.put<CTE>(`${this.BASE}/ctes/${id}`, c); }
+  deletarCTE(id: number): Observable<any> { return this.http.delete(`${this.BASE}/ctes/${id}`); }
 
   // Genérico
-  listar<T>(r: string): Observable<T[]> { return this.http.get<T[]>(`${this.BASE}/${r}`, { headers: this.h() }); }
-  criar<T>(r: string, d: T): Observable<T> { return this.http.post<T>(`${this.BASE}/${r}`, d, { headers: this.h() }); }
-  atualizar<T>(r: string, id: number, d: T): Observable<T> { return this.http.put<T>(`${this.BASE}/${r}/${id}`, d, { headers: this.h() }); }
-  deletar(r: string, id: number): Observable<any> { return this.http.delete(`${this.BASE}/${r}/${id}`, { headers: this.h() }); }
+  listar<T>(r: string): Observable<T[]> { return this.http.get<T[]>(`${this.BASE}/${r}`); }
+  criar<T>(r: string, d: T): Observable<T> { return this.http.post<T>(`${this.BASE}/${r}`, d); }
+  atualizar<T>(r: string, id: number, d: T): Observable<T> { return this.http.put<T>(`${this.BASE}/${r}/${id}`, d); }
+  deletar(r: string, id: number): Observable<any> { return this.http.delete(`${this.BASE}/${r}/${id}`); }
 
   listarClientes():    Observable<Cliente[]>    { return this.listar('clientes'); }
   listarArmadores():   Observable<Armador[]>    { return this.listar('armadores'); }
