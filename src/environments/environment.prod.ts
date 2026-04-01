@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://heat-robots-painted-viruses.trycloudflare.com'
+  apiUrl: 'https://api.vipesistemas.com.br'
 };
