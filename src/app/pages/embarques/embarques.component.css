@@ -34,8 +34,11 @@
 .modal-head h3 { font-size: 17px; font-weight: 700; }
 .modal-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 16px; }
 .modal-foot {
-  display: flex; justify-content: flex-end; gap: 12px;
+  display: flex; justify-content: flex-end; align-items: center; gap: 12px;
   padding: 20px 28px; border-top: 1px solid var(--border);
+}
+.erro-modal {
+  flex: 1; font-size: 13px; color: #f87171;
 }
 
 .checks-row {

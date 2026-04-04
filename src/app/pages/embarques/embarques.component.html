@@ -167,6 +167,7 @@
       </div>
     </div>
     <div class="modal-foot">
+      <span class="erro-modal" *ngIf="erroModal">{{ erroModal }}</span>
       <button class="btn btn-ghost" (click)="fecharModal()">Cancelar</button>
       <button class="btn btn-primary" (click)="salvar()" [disabled]="salvando">
         <div class="spinner" *ngIf="salvando"></div>

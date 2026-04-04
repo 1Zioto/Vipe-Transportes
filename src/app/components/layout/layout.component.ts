@@ -40,7 +40,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
   closeSidebar():  void { this.sidebarOpen = false; }
-
   sair(): void { this.auth.logout(); }
 
   get iniciais(): string {
@@ -49,7 +48,8 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   get avatarColor(): string {
-    const i = (this.usuario?.id || 0) % this.avatarColors.length;
-    return this.avatarColors[i];
+    const id = this.usuario?.id || '';
+    const hash = id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+    return this.avatarColors[hash % this.avatarColors.length];
   }
 }
