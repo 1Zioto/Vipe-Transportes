@@ -29,7 +29,7 @@ export class EmbarquesComponent implements OnInit {
   sortDir: 'asc' | 'desc' = 'desc';
   carregando = false;
   salvando = false;
-  modalAberto = false;
+  telaForm = false;
   selecionado: Embarque | null = null;
   erroModal = '';
 
@@ -60,9 +60,7 @@ export class EmbarquesComponent implements OnInit {
         this.mercadorias = d.mercadorias;
         this.carregando  = false;
       },
-      error: () => {
-        this.carregando = false;
-      }
+      error: () => { this.carregando = false; }
     });
   }
 
@@ -93,52 +91,54 @@ export class EmbarquesComponent implements OnInit {
     return this.sortDir === 'asc' ? '↑' : '↓';
   }
 
-  abrirModal(e: Embarque | null = null): void {
-    this.selecionado = e;
-    this.erroModal = '';
-    this.form = e
-      ? { ...e }
-      : {
-          status: 'Pendente',
-          cliente_id: undefined,
-          armador_id: undefined,
-          armazem_id: undefined,
-          destino_id: undefined,
-          mercadoria_id: undefined,
-          fito: false,
-          fumigacao: false,
-          higienizacao: false,
-          forracaoDupla: false
-        };
-
-    // Se as listas auxiliares ainda não foram carregadas, tentar carregar agora
-    if (!this.clientes.length || !this.armadores.length || !this.destinos.length) {
-      forkJoin({
-        clientes:    this.api.listarClientes().pipe(catchError(() => of([] as Cliente[]))),
-        armadores:   this.api.listarArmadores().pipe(catchError(() => of([] as Armador[]))),
-        armazens:    this.api.listarArmazens().pipe(catchError(() => of([] as Armazem[]))),
-        destinos:    this.api.listarDestinos().pipe(catchError(() => of([] as Destino[]))),
-        mercadorias: this.api.listarMercadorias().pipe(catchError(() => of([] as Mercadoria[])))
-      }).subscribe(d => {
-        this.clientes    = d.clientes;
-        this.armadores   = d.armadores;
-        this.armazens    = d.armazens;
-        this.destinos    = d.destinos;
-        this.mercadorias = d.mercadorias;
-      });
-    }
-
-    this.modalAberto = true;
-  }
-
-  editar(e: Embarque): void {
-    this.abrirModal(e);
-  }
-
-  fecharModal(ev?: MouseEvent): void {
-    this.modalAberto = false;
+  novoEmbarque(): void {
     this.selecionado = null;
     this.erroModal = '';
+    this.form = {
+      status: 'Pendente',
+      cliente_id: undefined,
+      armador_id: undefined,
+      armazem_id: undefined,
+      destino_id: undefined,
+      mercadoria_id: undefined,
+      fito: false,
+      fumigacao: false,
+      higienizacao: false,
+      forracaoDupla: false
+    };
+    this.carregarAuxiliares();
+    this.telaForm = true;
+  }
+
+  editarEmbarque(e: Embarque): void {
+    this.selecionado = e;
+    this.erroModal = '';
+    this.form = { ...e };
+    this.carregarAuxiliares();
+    this.telaForm = true;
+  }
+
+  voltarLista(): void {
+    this.telaForm = false;
+    this.selecionado = null;
+    this.erroModal = '';
+  }
+
+  carregarAuxiliares(): void {
+    if (this.clientes.length && this.armadores.length && this.destinos.length) return;
+    forkJoin({
+      clientes:    this.api.listarClientes().pipe(catchError(() => of([] as Cliente[]))),
+      armadores:   this.api.listarArmadores().pipe(catchError(() => of([] as Armador[]))),
+      armazens:    this.api.listarArmazens().pipe(catchError(() => of([] as Armazem[]))),
+      destinos:    this.api.listarDestinos().pipe(catchError(() => of([] as Destino[]))),
+      mercadorias: this.api.listarMercadorias().pipe(catchError(() => of([] as Mercadoria[])))
+    }).subscribe(d => {
+      this.clientes    = d.clientes;
+      this.armadores   = d.armadores;
+      this.armazens    = d.armazens;
+      this.destinos    = d.destinos;
+      this.mercadorias = d.mercadorias;
+    });
   }
 
   salvar(): void {
@@ -153,7 +153,7 @@ export class EmbarquesComponent implements OnInit {
     obs.subscribe({
       next: () => {
         this.salvando = false;
-        this.fecharModal();
+        this.voltarLista();
         this.carregar();
       },
       error: (err) => {
