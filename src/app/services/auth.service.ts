@@ -8,26 +8,55 @@ export interface Usuario {
   nome: string;
   email: string;
   cargo?: string;
+  papel: string; // 'admin' | 'operador' | 'financeiro' | 'consultor' | 'motorista'
 }
+
+// Módulos acessíveis por papel
+const ACESSO: Record<string, string[]> = {
+  admin:      ['*'],
+  operador:   ['dashboard','embarques','tarefas','ctes','frota','mapa'],
+  financeiro: ['dashboard','ctes','relatorios'],
+  consultor:  ['dashboard','embarques','ctes','relatorios'],
+  motorista:  ['dashboard','mapa'],
+};
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   usuarioLogado = signal<Usuario | null>(this._loadFromStorage());
 
   constructor(private supabase: SupabaseService, private router: Router) {
-    // Sync session on init
     this.supabase.client.auth.getSession().then(({ data }) => {
       if (data.session?.user) {
-        this.usuarioLogado.set(this._toUsuario(data.session.user));
+        this._enrichAndSet(data.session.user);
       } else {
         this.usuarioLogado.set(null);
       }
     });
 
-    // Listen for auth state changes
     this.supabase.client.auth.onAuthStateChange((_event, session) => {
-      this.usuarioLogado.set(session?.user ? this._toUsuario(session.user) : null);
+      if (session?.user) {
+        this._enrichAndSet(session.user);
+      } else {
+        this.usuarioLogado.set(null);
+      }
     });
+  }
+
+  /** Carrega papel da tabela perfis (mais seguro que user_metadata) */
+  private async _enrichAndSet(user: any): Promise<void> {
+    const base = this._toUsuario(user);
+    try {
+      const { data } = await this.supabase.client
+        .from('perfis')
+        .select('papel, nome')
+        .eq('id', user.id)
+        .single();
+      if (data) {
+        base.papel = data.papel || base.papel;
+        if (data.nome) base.nome = data.nome;
+      }
+    } catch { /* usa fallback do user_metadata */ }
+    this.usuarioLogado.set(base);
   }
 
   private _toUsuario(user: any): Usuario {
@@ -35,7 +64,8 @@ export class AuthService {
       id: user.id,
       nome: user.user_metadata?.['nome'] || user.email?.split('@')[0] || 'Usuário',
       email: user.email || '',
-      cargo: user.user_metadata?.['cargo'] || 'Operador',
+      cargo: user.user_metadata?.['papel'] || user.user_metadata?.['cargo'] || 'Operador',
+      papel: (user.user_metadata?.['papel'] || user.user_metadata?.['cargo'] || 'operador').toLowerCase(),
     };
   }
 
@@ -72,4 +102,14 @@ export class AuthService {
 
   get estaLogado(): boolean { return !!this.usuarioLogado(); }
   get token(): string | null { return 'managed-by-supabase'; }
+
+  get isAdmin(): boolean {
+    return this.usuarioLogado()?.papel === 'admin';
+  }
+
+  podeAcessar(modulo: string): boolean {
+    const papel = this.usuarioLogado()?.papel || 'operador';
+    const perms = ACESSO[papel] || ACESSO['operador'];
+    return perms.includes('*') || perms.includes(modulo);
+  }
 }

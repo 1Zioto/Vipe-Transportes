@@ -4,9 +4,9 @@
   --navy-mid:   #0f2040;
   --navy-light: #162d55;
   --navy-card:  #1a3060;
-  --blue:       #1e6ef0;
-  --blue-light: #4d9ef6;
-  --blue-glow:  rgba(30,110,240,0.25);
+  --blue:       #ffd700;
+  --blue-light: #ffd700;
+  --blue-glow:  rgba(255,215,0,0.25);
   --cyan:       #00d4ff;
   --green:      #10d48e;
   --orange:     #ff8c42;
@@ -50,7 +50,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
 
 /* Selection */
-::selection { background: var(--blue); color: var(--white); }
+::selection { background: var(--blue); color: #0a1628; }
 
 /* Focus */
 :focus-visible { outline: 2px solid var(--blue-light); outline-offset: 2px; border-radius: 4px; }
@@ -70,7 +70,7 @@ body {
 .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .badge-pendente    { background: rgba(255,215,0,0.12); color: var(--yellow);  border: 1px solid rgba(255,215,0,0.25); }
 .badge-pendente::before { background: var(--yellow); }
-.badge-agendado    { background: rgba(77,158,246,0.12); color: var(--blue-light); border: 1px solid rgba(77,158,246,0.25); }
+.badge-agendado    { background: rgba(255,215,0,0.12); color: var(--blue-light); border: 1px solid rgba(255,215,0,0.25); }
 .badge-agendado::before { background: var(--blue-light); }
 .badge-coleta      { background: rgba(0,212,255,0.12); color: var(--cyan); border: 1px solid rgba(0,212,255,0.25); }
 .badge-coleta::before { background: var(--cyan); }
@@ -84,7 +84,7 @@ body {
 /* Prioridade */
 .badge-urgente { background: rgba(255,77,109,0.15); color: var(--red); border: 1px solid rgba(255,77,109,0.3); }
 .badge-alta    { background: rgba(255,140,66,0.15); color: var(--orange); border: 1px solid rgba(255,140,66,0.3); }
-.badge-media   { background: rgba(77,158,246,0.15); color: var(--blue-light); border: 1px solid rgba(77,158,246,0.3); }
+.badge-media   { background: rgba(255,215,0,0.15); color: var(--blue-light); border: 1px solid rgba(255,215,0,0.3); }
 .badge-baixa   { background: rgba(255,255,255,0.07); color: var(--text-dim); border: 1px solid var(--border); }
 
 /* Botões */
@@ -95,8 +95,8 @@ body {
   transition: all var(--transition); white-space: nowrap; text-decoration: none;
 }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-primary { background: var(--blue); color: #fff; }
-.btn-primary:hover:not(:disabled) { background: #2b7ff5; transform: translateY(-1px); box-shadow: 0 4px 20px var(--blue-glow); }
+.btn-primary { background: var(--blue); color: #0a1628; }
+.btn-primary:hover:not(:disabled) { background: #ffe566; transform: translateY(-1px); box-shadow: 0 4px 20px var(--blue-glow); }
 .btn-ghost { background: var(--glass); color: var(--white); border: 1px solid var(--border); }
 .btn-ghost:hover:not(:disabled) { background: var(--glass-hover); border-color: var(--border-mid); }
 .btn-danger { background: rgba(255,77,109,0.15); color: var(--red); border: 1px solid rgba(255,77,109,0.3); }

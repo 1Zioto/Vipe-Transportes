@@ -1,0 +1,87 @@
+<app-layout>
+<div class="mapa-shell">
+
+  <!-- Painel lateral de veículos -->
+  <div class="mapa-painel">
+    <div class="painel-header">
+      <div class="painel-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="m16 8 5 0 2 4 1 5H16V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        Veículos em Rota
+      </div>
+      <span class="painel-count">
+        {{ filtrados.length }}<span *ngIf="filtro"> / {{ dados.length }}</span>
+      </span>
+    </div>
+
+    <div class="painel-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input
+        class="painel-input"
+        [(ngModel)]="filtro"
+        (ngModel)="onFiltro()"
+        (input)="onFiltro()"
+        placeholder="Buscar placa..."
+      />
+    </div>
+
+    <!-- Loading -->
+    <div class="painel-loading" *ngIf="carregando">
+      <div class="spinner"></div>
+      <span>Carregando veículos...</span>
+    </div>
+
+    <!-- Erro -->
+    <div class="painel-erro" *ngIf="erro && !carregando">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ erro }}
+      <button class="btn btn-sm btn-ghost" (click)="carregar()" style="margin-top:8px">Tentar novamente</button>
+    </div>
+
+    <!-- Lista com scroll infinito -->
+    <div class="painel-scroll-wrap" *ngIf="!carregando && !erro">
+      <div class="painel-lista" id="lista-veiculos">
+        <!-- Duplicado para scroll infinito (primeira metade) -->
+        <div class="veiculo-card" *ngFor="let v of filtrados" (click)="centrarEm(v)">
+          <div class="veiculo-placa">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="m16 8 5 0 2 4 1 5H16V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            {{ v.placa }}
+          </div>
+          <div class="veiculo-motorista" *ngIf="v.motorista">{{ v.motorista }}</div>
+          <div class="veiculo-local">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ v.endereco || 'Localizando...' }}
+          </div>
+        </div>
+        <!-- Segunda metade (duplicada para loop visual) -->
+        <div class="veiculo-card" *ngFor="let v of filtrados" (click)="centrarEm(v)">
+          <div class="veiculo-placa">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="m16 8 5 0 2 4 1 5H16V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            {{ v.placa }}
+          </div>
+          <div class="veiculo-motorista" *ngIf="v.motorista">{{ v.motorista }}</div>
+          <div class="veiculo-local">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ v.endereco || 'Localizando...' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="painel-empty" *ngIf="!carregando && !erro && !filtrados.length">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="m16 8 5 0 2 4 1 5H16V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      <p>Nenhum veículo encontrado</p>
+    </div>
+
+    <div class="painel-footer">
+      <div class="painel-status">
+        <span class="status-dot"></span>
+        Atualização automática a cada 10s
+      </div>
+    </div>
+  </div>
+
+  <!-- Mapa Leaflet -->
+  <div id="mapa-container" class="mapa-view"></div>
+
+</div>
+</app-layout>

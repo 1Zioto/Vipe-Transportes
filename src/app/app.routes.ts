@@ -38,6 +38,11 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'mapa',
+    loadComponent: () => import('./pages/mapa/mapa.component').then(m => m.MapaComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: 'relatorios',
     loadComponent: () => import('./pages/relatorios/relatorios.component').then(m => m.RelatoriosComponent),
     canActivate: [authGuard]
