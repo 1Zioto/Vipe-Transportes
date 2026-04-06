@@ -1,0 +1,143 @@
+<app-layout>
+<div class="page-wrap">
+
+  <!-- ── Meu Perfil ──────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ isAdmin ? 'Usuários' : 'Meu Perfil' }}</h1>
+      <p class="page-sub">{{ isAdmin ? 'Gerencie usuários e níveis de acesso' : 'Gerencie suas informações de conta' }}</p>
+    </div>
+    <button *ngIf="isAdmin" class="btn btn-primary" (click)="abrirModalCriar()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Novo Usuário
+    </button>
+  </div>
+
+  <!-- ── Painel perfil do próprio usuário ─────────────────────────────────── -->
+  <div class="my-profile-card card" [style.margin-bottom]="isAdmin ? '32px' : '0'">
+    <div class="profile-top">
+      <div class="profile-avatar" [style.background]="avatarColor">{{ iniciais }}</div>
+      <div class="profile-info">
+        <div class="profile-name">{{ usuarioAtual?.nome }}</div>
+        <div class="profile-email">{{ usuarioAtual?.email }}</div>
+        <span [class]="papelBadgeClass(usuarioAtual?.papel || '')">
+          {{ papelIcon(usuarioAtual?.papel || '') }} {{ papelLabel(usuarioAtual?.papel || '') }}
+        </span>
+      </div>
+    </div>
+
+    <div class="profile-form">
+      <div class="form-row">
+        <div>
+          <label class="label">Nome completo</label>
+          <input class="input" [(ngModel)]="formPerfil.nome" placeholder="Seu nome" />
+        </div>
+        <div *ngIf="!isAdmin">
+          <label class="label">Cargo / Papel</label>
+          <input class="input" [value]="papelLabel(usuarioAtual?.papel || '')" disabled style="opacity:0.55" />
+          <small style="color:var(--text-muted);font-size:11px">Apenas administradores podem alterar papéis.</small>
+        </div>
+        <div *ngIf="isAdmin">
+          <label class="label">E-mail</label>
+          <input class="input" [value]="usuarioAtual?.email" disabled style="opacity:0.55" />
+        </div>
+      </div>
+
+      <div *ngIf="erroPerfil" class="erro-box">{{ erroPerfil }}</div>
+      <div *ngIf="salvoMsg" class="sucesso-box">✓ Perfil atualizado com sucesso!</div>
+
+      <button class="btn btn-primary" (click)="salvarPerfil()" [disabled]="salvandoPerfil">
+        {{ salvandoPerfil ? 'Salvando…' : 'Salvar Alterações' }}
+      </button>
+    </div>
+
+    <!-- Meus acessos -->
+    <div class="meus-acessos" *ngIf="usuarioAtual?.papel">
+      <div class="acessos-label">Meus módulos</div>
+      <div class="acessos-list">
+        <span *ngFor="let a of acessos(usuarioAtual!.papel)" class="acesso-chip">{{ a }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Lista de usuários (admin) ─────────────────────────────────────────── -->
+  <ng-container *ngIf="isAdmin">
+
+    <div *ngIf="carregando" class="loading-center">
+      <div class="spinner" style="width:32px;height:32px;border-width:3px"></div>
+    </div>
+
+    <div *ngIf="erroLista" class="erro-box" style="margin-bottom:16px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {{ erroLista }}
+    </div>
+
+    <div class="users-grid" *ngIf="!carregando && !erroLista">
+      <div *ngFor="let u of usuarios" class="user-card" [class.inativo]="!u.ativo">
+        <div class="uc-header">
+          <div class="uc-avatar" [style.background]="avatarColorFor(u.id)">
+            {{ iniciaisFor(u.nome) }}
+          </div>
+          <div class="uc-info">
+            <div class="uc-nome">
+              {{ u.nome }}
+              <span *ngIf="ehEuMesmo(u.id)" class="eu-label">(você)</span>
+            </div>
+            <div class="uc-email">{{ u.email }}</div>
+            <span [class]="papelBadgeClass(u.papel)">
+              {{ papelIcon(u.papel) }} {{ papelLabel(u.papel) }}
+            </span>
+          </div>
+          <div class="uc-actions">
+            <div class="status-dot" [class.ativo]="u.ativo" [title]="u.ativo ? 'Ativo' : 'Inativo'"></div>
+            <button class="btn btn-ghost btn-sm" (click)="abrirEditar(u)" *ngIf="!ehEuMesmo(u.id)">Editar</button>
+            <button class="btn btn-sm" [class.btn-danger]="u.ativo" [class.btn-ghost]="!u.ativo" (click)="toggleAtivo(u)" *ngIf="!ehEuMesmo(u.id)" [title]="u.ativo ? 'Desativar' : 'Reativar'">{{ u.ativo ? 'Desativar' : 'Reativar' }}</button>
+          </div>
+        </div>
+        <div class="perm-table">
+          <div class="perm-header"><span>Módulos com acesso</span></div>
+          <div class="perm-chips-row">
+            <span *ngFor="let a of acessos(u.papel)" class="acesso-chip">{{ a }}</span>
+            <span *ngIf="acessos(u.papel).length === 0" style="color:var(--text-muted);font-size:13px">Sem módulos</span>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="usuarios.length === 0" class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        <p>Nenhum usuário encontrado.<br>Crie o primeiro usando o botão "Novo Usuário".</p>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<div class="modal-overlay" *ngIf="modalCriar" (click)="fecharModalCriar()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-head"><h3>Novo Usuário</h3><button class="btn btn-ghost btn-icon" (click)="fecharModalCriar()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body" *ngIf="!novoCriado">
+      <div class="form-group"><label class="label">Nome completo *</label><input class="input" [(ngModel)]="formCriar.nome" placeholder="Ex: João Silva" /></div>
+      <div class="form-group"><label class="label">E-mail *</label><input class="input" type="email" [(ngModel)]="formCriar.email" placeholder="joao@empresa.com" /></div>
+      <div class="form-group"><label class="label">Senha temporária *</label><input class="input" type="password" [(ngModel)]="formCriar.senha" placeholder="Mínimo 6 caracteres" /></div>
+      <div class="form-group"><label class="label">Nível de acesso *</label><select class="input" [(ngModel)]="formCriar.papel"><option *ngFor="let p of papeis" [value]="p.value">{{ p.icon }} {{ p.label }}</option></select></div>
+      <div class="acesso-preview"><div class="acessos-label">Módulos liberados:</div><div class="acessos-list"><span *ngFor="let a of acessos(formCriar.papel)" class="acesso-chip">{{ a }}</span></div></div>
+      <div *ngIf="erroCriar" class="erro-box">{{ erroCriar }}</div>
+    </div>
+    <div class="modal-body" *ngIf="novoCriado" style="text-align:center;padding:40px 28px"><div style="font-size:48px">✅</div><div style="font-size:17px;font-weight:700;margin-top:12px">Usuário criado!</div></div>
+    <div class="modal-foot" *ngIf="!novoCriado"><button class="btn btn-ghost" (click)="fecharModalCriar()">Cancelar</button><button class="btn btn-primary" (click)="criarUsuario()" [disabled]="criando"><span *ngIf="criando" class="spinner" style="width:16px;height:16px;border-width:2px"></span>{{ criando ? 'Criando…' : 'Criar Usuário' }}</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="modalEditar" (click)="fecharEditar()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-head"><h3>Editar Usuário</h3><button class="btn btn-ghost btn-icon" (click)="fecharEditar()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="label">Nome</label><input class="input" [(ngModel)]="formEditar.nome" /></div>
+      <div class="form-group"><label class="label">Nível de acesso</label><select class="input" [(ngModel)]="formEditar.papel"><option *ngFor="let p of papeis" [value]="p.value">{{ p.icon }} {{ p.label }}</option></select></div>
+      <div class="acesso-preview"><div class="acessos-label">Módulos após salvar:</div><div class="acessos-list"><span *ngFor="let a of acessos(formEditar.papel)" class="acesso-chip">{{ a }}</span></div></div>
+      <div class="form-group"><label class="label">Status</label><div class="toggle-wrap"><label class="toggle"><input type="checkbox" [(ngModel)]="formEditar.ativo" /><span class="toggle-slider"></span></label><span style="font-size:14px">{{ formEditar.ativo ? 'Usuário ativo' : 'Usuário desativado' }}</span></div></div>
+      <div *ngIf="erroEdit" class="erro-box">{{ erroEdit }}</div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" (click)="fecharEditar()">Cancelar</button><button class="btn btn-primary" (click)="salvarEditar()" [disabled]="salvandoEdit">{{ salvandoEdit ? 'Salvando…' : 'Salvar Alterações' }}</button></div>
+  </div>
+</div>
+
+</app-layout>

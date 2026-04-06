@@ -1,0 +1,233 @@
+/* ── Shell do Mapa ── */
+:host {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.mapa-shell {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Painel Lateral ── */
+.mapa-painel {
+  width: 300px;
+  flex-shrink: 0;
+  background: var(--navy-mid);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.painel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.painel-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.painel-count {
+  font-size: 12px;
+  color: var(--blue-light);
+  background: rgba(255,215,0,0.15);
+  border: 1px solid rgba(255,215,0,0.25);
+  border-radius: 20px;
+  padding: 2px 9px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+.painel-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 12px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.painel-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 13px;
+}
+
+.painel-input::placeholder { color: var(--text-muted); }
+
+/* Scroll container */
+.painel-scroll-wrap {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.painel-lista {
+  position: absolute;
+  width: 100%;
+  will-change: transform;
+}
+
+/* Cards de veículo */
+.veiculo-card {
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.veiculo-card:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+.veiculo-placa {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-light);
+  margin-bottom: 3px;
+}
+
+.veiculo-motorista {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+}
+
+.veiculo-local {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Loading / erro / vazio */
+.painel-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 16px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.painel-erro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--red);
+  font-size: 13px;
+  text-align: center;
+}
+
+.painel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.painel-empty svg { opacity: 0.3; }
+
+/* Footer do painel */
+.painel-footer {
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.painel-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── Mapa ── */
+.mapa-view {
+  flex: 1;
+  min-height: 0;
+  z-index: 1;
+}
+
+/* Override Leaflet tooltip */
+:host ::ng-deep .leaflet-tooltip {
+  background: #0a1628;
+  color: #ffd700;
+  border: 1px solid rgba(255,215,0,0.4);
+  border-radius: 8px;
+  padding: 3px 9px;
+  font-weight: 700;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+
+:host ::ng-deep .leaflet-tooltip-top::before {
+  border-top-color: rgba(255,215,0,0.4);
+}
+
+/* Mobile: painel vira bottom sheet */
+@media (max-width: 768px) {
+  .mapa-shell {
+    flex-direction: column-reverse;
+    height: 100vh;
+  }
+  .mapa-painel {
+    width: 100%;
+    height: 220px;
+    border-right: none;
+    border-top: 1px solid var(--border);
+  }
+}

@@ -1,0 +1,23 @@
+# Angular build output
+/dist
+/.angular
+/node_modules
+
+# Environment (não commitar)
+# src/environments/environment.prod.ts  ← NÃO ignorar, Vercel precisa
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+.vercel
+.env*.local

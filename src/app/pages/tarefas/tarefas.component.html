@@ -1,0 +1,128 @@
+<app-layout>
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Tarefas Pendentes</h1>
+      <p class="page-sub">{{ tarefas.length }} tarefas · {{ urgentes }} urgentes</p>
+    </div>
+    <button class="btn btn-primary" (click)="abrirModal()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Nova Tarefa
+    </button>
+  </div>
+
+  <!-- Filtros rápidos -->
+  <div class="filters-bar">
+    <button class="filter-chip" [class.active]="filtro===''" (click)="filtro=''">Todas</button>
+    <button class="filter-chip urgente" [class.active]="filtro==='urgente'" (click)="filtro='urgente'">🔴 Urgente</button>
+    <button class="filter-chip alta" [class.active]="filtro==='alta'" (click)="filtro='alta'">🟠 Alta</button>
+    <button class="filter-chip media" [class.active]="filtro==='media'" (click)="filtro='media'">🔵 Média</button>
+    <button class="filter-chip" [class.active]="filtro==='pendente'" (click)="filtro='pendente'">Pendentes</button>
+    <button class="filter-chip" [class.active]="filtro==='em_andamento'" (click)="filtro='em_andamento'">Em andamento</button>
+    <button class="filter-chip" [class.active]="filtro==='concluida'" (click)="filtro='concluida'">Concluídas</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-center" *ngIf="carregando"><div class="spinner"></div></div>
+
+  <!-- Cards de tarefas -->
+  <div class="tasks-grid" *ngIf="!carregando">
+    <div class="task-card" *ngFor="let t of filtradas" [ngClass]="'border-' + t.prioridade">
+      <!-- Header da tarefa -->
+      <div class="task-header">
+        <div class="prio-row">
+          <span class="badge" [ngClass]="'badge-' + t.prioridade">{{ t.prioridade }}</span>
+          <span class="badge" [ngClass]="statusTaskBadge(t.status)">{{ statusTaskLabel(t.status) }}</span>
+        </div>
+        <div class="task-actions">
+          <button class="btn btn-ghost btn-icon btn-sm" (click)="editar(t)" title="Editar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn btn-danger btn-icon btn-sm" (click)="deletar(t)" title="Excluir">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <h4 class="task-titulo">{{ t.titulo }}</h4>
+      <p class="task-desc" *ngIf="t.descricao">{{ t.descricao }}</p>
+      <div class="task-meta">
+        <span *ngIf="t.responsavel" class="meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0 1 12 0v2"/></svg>
+          {{ t.responsavel }}
+        </span>
+        <span *ngIf="t.embarque_booking" class="meta-item">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
+          {{ t.embarque_booking }}
+        </span>
+        <span *ngIf="t.data_vencimento" class="meta-item" [class.vencida]="isVencida(t.data_vencimento) && t.status !== 'concluida'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {{ t.data_vencimento | date:'dd/MM/yyyy' }}
+        </span>
+      </div>
+      <!-- Ação rápida de status -->
+      <div class="quick-status" *ngIf="t.status !== 'concluida' && t.status !== 'cancelada'">
+        <button class="btn btn-ghost btn-sm" style="font-size:12px;padding:6px 12px" (click)="concluir(t)">✓ Concluir</button>
+      </div>
+    </div>
+
+    <div class="empty-state" *ngIf="!filtradas.length">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <p>Nenhuma tarefa encontrada</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal tarefa -->
+<div class="modal-overlay" *ngIf="modalAberto" (click)="fecharModal($event)">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h3>{{ selecionado ? 'Editar Tarefa' : 'Nova Tarefa' }}</h3>
+      <button class="btn btn-ghost btn-icon btn-sm" (click)="fecharModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div><label class="label">Título *</label><input class="input" [(ngModel)]="form.titulo" placeholder="Descreva a tarefa…"/></div>
+      <div><label class="label">Descrição</label><textarea class="input" [(ngModel)]="form.descricao" rows="3" placeholder="Detalhes adicionais…" style="resize:vertical"></textarea></div>
+      <div class="grid-2">
+        <div>
+          <label class="label">Prioridade</label>
+          <select class="input" [(ngModel)]="form.prioridade">
+            <option value="baixa">Baixa</option>
+            <option value="media">Média</option>
+            <option value="alta">Alta</option>
+            <option value="urgente">Urgente</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Status</label>
+          <select class="input" [(ngModel)]="form.status">
+            <option value="pendente">Pendente</option>
+            <option value="em_andamento">Em andamento</option>
+            <option value="concluida">Concluída</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div><label class="label">Responsável</label><input class="input" [(ngModel)]="form.responsavel" placeholder="Nome do responsável"/></div>
+        <div><label class="label">Vencimento</label><input class="input" type="date" [(ngModel)]="form.data_vencimento"/></div>
+      </div>
+      <div>
+        <label class="label">Embarque (opcional)</label>
+        <select class="input" [(ngModel)]="form.embarque_id">
+          <option [ngValue]="null">Sem vínculo</option>
+          <option *ngFor="let e of embarques" [ngValue]="e.id">{{ e.booking }} - {{ e.cliente }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" (click)="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" (click)="salvar()" [disabled]="salvando">
+        <div class="spinner" *ngIf="salvando"></div>
+        <span *ngIf="!salvando">{{ selecionado ? 'Salvar' : 'Criar tarefa' }}</span>
+      </button>
+    </div>
+  </div>
+</div>
+</app-layout>

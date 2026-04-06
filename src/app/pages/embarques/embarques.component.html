@@ -1,0 +1,257 @@
+<app-layout>
+
+  <!-- ═══ TELA DE LISTA ═══ -->
+  <div class="page-wrap" *ngIf="!telaForm">
+
+    <!-- Header com banner Vipe -->
+    <div class="vipe-banner">
+      <div class="vipe-logo">
+        <svg width="32" height="26" viewBox="0 0 32 26" fill="none">
+          <polygon points="0,0 11,0 16,26 5,26" fill="#1a1a2e"/>
+          <polygon points="9,0 20,0 25,26 14,26" fill="white" opacity="0.9"/>
+        </svg>
+        <span class="vipe-logo-text">VIPE</span>
+        <span class="vipe-logo-sub">TRANSPORTES</span>
+      </div>
+      <div class="vipe-banner-right">
+        <span class="banner-count">{{ embarques.length }} embarques</span>
+        <button class="btn-vipe" (click)="novoEmbarque()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Novo Embarque
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-bar">
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-inp" [(ngModel)]="busca" placeholder="Booking, contrato, cliente…" />
+      </div>
+      <select class="filter-select" [(ngModel)]="filtroStatus">
+        <option value="">Todos os status</option>
+        <option value="Pendente">Pendente</option>
+        <option value="Agendado">Agendado</option>
+        <option value="Em Coleta">Em Coleta</option>
+        <option value="Em Transporte">Em Transporte</option>
+        <option value="Entregue">Entregue</option>
+        <option value="Cancelado">Cancelado</option>
+      </select>
+      <button class="btn-refresh" (click)="carregar()" title="Recarregar">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-center" *ngIf="carregando">
+      <div class="vipe-spinner"></div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="tbl-wrap" *ngIf="!carregando">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" (click)="ordenar('booking')">Booking {{ sortIcon('booking') }}</th>
+            <th class="sortable" (click)="ordenar('cliente')">Cliente {{ sortIcon('cliente') }}</th>
+            <th>Destino</th>
+            <th>Navio</th>
+            <th class="sortable" (click)="ordenar('dataCarreg')">Data Carreg. {{ sortIcon('dataCarreg') }}</th>
+            <th>Status</th>
+            <th style="width:100px">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let e of filtrados">
+            <td><span class="booking-tag">{{ e.booking || '—' }}</span></td>
+            <td>{{ e.cliente || '—' }}</td>
+            <td>{{ e.destino || '—' }}</td>
+            <td>{{ e.navio || '—' }}</td>
+            <td>{{ e.dataCarreg | date:'dd/MM/yyyy' }}</td>
+            <td><span class="badge" [ngClass]="statusBadge(e.status)">{{ e.status }}</span></td>
+            <td>
+              <div class="row-actions">
+                <button class="btn-icon-action" (click)="editarEmbarque(e)" title="Editar">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn-icon-action danger" (click)="deletar(e)" title="Excluir">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty-state" *ngIf="!filtrados.length">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        <p>Nenhum embarque encontrado</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TELA DE CADASTRO / EDIÇÃO ═══ -->
+  <div class="form-page" *ngIf="telaForm">
+
+    <!-- Header amarelo Vipe -->
+    <div class="form-header">
+      <div class="vipe-logo">
+        <svg width="32" height="26" viewBox="0 0 32 26" fill="none">
+          <polygon points="0,0 11,0 16,26 5,26" fill="#1a1a2e"/>
+          <polygon points="9,0 20,0 25,26 14,26" fill="white" opacity="0.9"/>
+        </svg>
+        <span class="vipe-logo-text">VIPE</span>
+        <span class="vipe-logo-sub">TRANSPORTES</span>
+      </div>
+      <span class="form-header-title">{{ selecionado ? 'Editar Embarque' : 'Novo Embarque' }}</span>
+    </div>
+
+    <!-- Corpo do formulário -->
+    <div class="form-body">
+
+      <!-- Voltar -->
+      <button class="btn-back" (click)="voltarLista()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Voltar para lista
+      </button>
+
+      <div class="form-card">
+        <div class="form-section-label">Identificação</div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Booking</label>
+            <input type="text" [(ngModel)]="form.booking" placeholder="BKG-001" />
+          </div>
+          <div class="form-field">
+            <label>Contrato</label>
+            <input type="text" [(ngModel)]="form.contrato" placeholder="CT-001" />
+          </div>
+          <div class="form-field">
+            <label>Cliente <span class="req-dot"></span></label>
+            <select [(ngModel)]="form.cliente_id">
+              <option [ngValue]="null">Selecione...</option>
+              <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.nome }}</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Armador</label>
+            <select [(ngModel)]="form.armador_id">
+              <option [ngValue]="null">Selecione...</option>
+              <option *ngFor="let a of armadores" [ngValue]="a.id">{{ a.nome }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section-label">Destino & Logística</div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Destino <span class="req-dot"></span></label>
+            <select [(ngModel)]="form.destino_id">
+              <option [ngValue]="null">Selecione...</option>
+              <option *ngFor="let d of destinos" [ngValue]="d.id">{{ d.porto }}</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Navio</label>
+            <input type="text" [(ngModel)]="form.navio" placeholder="Nome do navio" />
+          </div>
+          <div class="form-field">
+            <label>Armazém</label>
+            <select [(ngModel)]="form.armazem_id">
+              <option [ngValue]="null">Selecione...</option>
+              <option *ngFor="let a of armazens" [ngValue]="a.id">{{ a.nome }}</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Mercadoria</label>
+            <select [(ngModel)]="form.mercadoria_id">
+              <option [ngValue]="null">Selecione...</option>
+              <option *ngFor="let m of mercadorias" [ngValue]="m.id">{{ m.descricao }}</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Data de Coleta</label>
+            <input type="date" [(ngModel)]="form.dataColeta" />
+          </div>
+          <div class="form-field">
+            <label>Data de Carregamento</label>
+            <input type="date" [(ngModel)]="form.dataCarreg" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section-label">Carga</div>
+        <div class="form-grid-3">
+          <div class="form-field">
+            <label>Município</label>
+            <input type="text" [(ngModel)]="form.municipio" placeholder="Cidade" />
+          </div>
+          <div class="form-field">
+            <label>UF</label>
+            <input type="text" [(ngModel)]="form.uf" placeholder="ES" maxlength="2" />
+          </div>
+          <div class="form-field">
+            <label>Qtd. Contêineres</label>
+            <input type="number" [(ngModel)]="form.quantCntr" placeholder="0" />
+          </div>
+          <div class="form-field">
+            <label>Embalagem</label>
+            <input type="text" [(ngModel)]="form.embalagem" placeholder="Big Bag" />
+          </div>
+          <div class="form-field">
+            <label>Peso Líquido (kg)</label>
+            <input type="number" [(ngModel)]="form.pesoLiquido" placeholder="0" />
+          </div>
+          <div class="form-field">
+            <label>Peso Bruto (kg)</label>
+            <input type="number" [(ngModel)]="form.pesoBruto" placeholder="0" />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-section-label">Status & Serviços</div>
+        <div class="form-grid-2" style="margin-bottom:16px">
+          <div class="form-field">
+            <label>Status</label>
+            <select [(ngModel)]="form.status">
+              <option>Pendente</option>
+              <option>Agendado</option>
+              <option>Em Coleta</option>
+              <option>Em Transporte</option>
+              <option>Entregue</option>
+              <option>Cancelado</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Qtd. Total</label>
+            <input type="number" [(ngModel)]="form.quantTotal" placeholder="0" />
+          </div>
+        </div>
+        <div class="checks-row">
+          <label class="check-lbl"><input type="checkbox" [(ngModel)]="form.fito" /> Fito</label>
+          <label class="check-lbl"><input type="checkbox" [(ngModel)]="form.fumigacao" /> Fumigação</label>
+          <label class="check-lbl"><input type="checkbox" [(ngModel)]="form.higienizacao" /> Higienização</label>
+          <label class="check-lbl"><input type="checkbox" [(ngModel)]="form.forracaoDupla" /> Forração Dupla</label>
+        </div>
+      </div>
+
+      <!-- Erro -->
+      <div class="erro-inline" *ngIf="erroModal">{{ erroModal }}</div>
+
+      <!-- Ações -->
+      <div class="form-actions">
+        <button class="btn-cancel" (click)="voltarLista()">Cancelar</button>
+        <button class="btn-vipe" (click)="salvar()" [disabled]="salvando">
+          <div class="vipe-spinner-sm" *ngIf="salvando"></div>
+          <svg *ngIf="!salvando" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>{{ selecionado ? 'Salvar alterações' : 'Cadastrar embarque' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</app-layout>

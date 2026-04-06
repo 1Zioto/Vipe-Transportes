@@ -1,0 +1,128 @@
+<app-layout>
+  <div class="page-wrap">
+
+    <!-- Cabeçalho -->
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">{{ saudacao }}, {{ nomeUsuario }} 👋</h1>
+        <p class="page-sub">{{ dataHoje }} · Resumo das operações</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-sm" (click)="carregar()" [disabled]="carregando">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" [class.spinning]="carregando">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            <path d="M8 16H3v5"/>
+          </svg>
+          Atualizar
+        </button>
+        <button class="btn btn-primary btn-sm" routerLink="/embarques">+ Novo Embarque</button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-blue" routerLink="/embarques">
+        <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="2"/><path d="M9 15h14"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ stats.total }}</div><div class="kpi-label">Total Embarques</div></div>
+      </div>
+      <div class="kpi-card kpi-yellow" routerLink="/embarques">
+        <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ stats.pendentes }}</div><div class="kpi-label">Pendentes</div></div>
+      </div>
+      <div class="kpi-card kpi-orange" routerLink="/embarques">
+        <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="m16 8 5 0 2 4 1 5H16V8Z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ stats.em_transporte }}</div><div class="kpi-label">Em Transporte</div></div>
+      </div>
+      <div class="kpi-card kpi-green" routerLink="/embarques">
+        <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ stats.entregues }}</div><div class="kpi-label">Entregues</div></div>
+      </div>
+      <div class="kpi-card kpi-red" routerLink="/tarefas">
+        <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ stats.tarefas_urgentes }}</div><div class="kpi-label">Tarefas Urgentes</div></div>
+      </div>
+      <div class="kpi-card kpi-cyan" routerLink="/ctes">
+        <div class="kpi-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="kpi-body"><div class="kpi-value">{{ stats.ctes_pendentes }}</div><div class="kpi-label">CTEs Pendentes</div></div>
+      </div>
+    </div>
+
+    <!-- Barra de status -->
+    <div class="status-bar-wrap" *ngIf="stats.total > 0">
+      <div class="status-bar">
+        <div class="sb-seg" [style.width]="pct(stats.pendentes)+'%'" style="background:var(--yellow)"></div>
+        <div class="sb-seg" [style.width]="pct(stats.em_transporte)+'%'" style="background:var(--orange)"></div>
+        <div class="sb-seg" [style.width]="pct(stats.entregues)+'%'" style="background:var(--green)"></div>
+      </div>
+      <div class="status-legend">
+        <span><i style="background:var(--yellow)"></i>Pendentes ({{ pct(stats.pendentes) }}%)</span>
+        <span><i style="background:var(--orange)"></i>Em Transporte ({{ pct(stats.em_transporte) }}%)</span>
+        <span><i style="background:var(--green)"></i>Entregues ({{ pct(stats.entregues) }}%)</span>
+      </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="dash-grid">
+      <!-- Embarques recentes -->
+      <div class="card">
+        <div class="card-head">
+          <h3>Embarques Recentes</h3>
+          <a routerLink="/embarques" class="btn btn-ghost btn-sm">Ver todos →</a>
+        </div>
+        <div class="loading-row" *ngIf="carregando">
+          <div class="spinner"></div><span>Carregando...</span>
+        </div>
+        <div class="emb-list" *ngIf="!carregando">
+          <div class="emb-row" *ngFor="let e of embarquesRecentes">
+            <div class="emb-dot" [ngClass]="statusDotClass(e.status)"></div>
+            <div class="emb-info">
+              <div class="emb-booking">{{ e.booking || '—' }}</div>
+              <div class="emb-sub">{{ e.cliente || 'Sem cliente' }}{{ e.destino ? ' · ' + e.destino : '' }}</div>
+            </div>
+            <span class="badge" [ngClass]="statusBadge(e.status)">{{ e.status }}</span>
+          </div>
+          <div class="empty-state" *ngIf="!embarquesRecentes.length">
+            <p>Nenhum embarque cadastrado</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarefas -->
+      <div class="card">
+        <div class="card-head">
+          <h3>Tarefas Prioritárias</h3>
+          <a routerLink="/tarefas" class="btn btn-ghost btn-sm">Ver todas →</a>
+        </div>
+        <div class="task-list">
+          <div class="task-row" *ngFor="let t of tarefasUrgentes">
+            <div class="task-dot" [ngClass]="'dot-'+t.prioridade"></div>
+            <div class="task-info">
+              <div class="task-titulo">{{ t.titulo }}</div>
+              <div class="task-sub">{{ t.responsavel || 'Sem responsável' }}<span *ngIf="t.data_vencimento"> · {{ t.data_vencimento | date:'dd/MM' }}</span></div>
+            </div>
+            <span class="badge" [ngClass]="'badge-'+t.prioridade">{{ t.prioridade }}</span>
+          </div>
+          <div class="empty-state" *ngIf="!tarefasUrgentes.length">
+            <p>Nenhuma tarefa urgente 🎉</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Atalhos rápidos -->
+    <div class="shortcuts">
+      <h3 class="shortcuts-title">Acesso rápido</h3>
+      <div class="shortcuts-grid">
+        <a class="shortcut" routerLink="/embarques"><span class="sc-icon" style="background:rgba(30,110,240,0.15)">📦</span><span>Embarques</span></a>
+        <a class="shortcut" routerLink="/tarefas"><span class="sc-icon" style="background:rgba(255,77,109,0.12)">✅</span><span>Tarefas</span></a>
+        <a class="shortcut" routerLink="/ctes"><span class="sc-icon" style="background:rgba(0,212,255,0.12)">📄</span><span>CTEs</span></a>
+        <a class="shortcut" routerLink="/frota"><span class="sc-icon" style="background:rgba(255,140,66,0.12)">🚛</span><span>Frota</span></a>
+        <a class="shortcut" routerLink="/relatorios"><span class="sc-icon" style="background:rgba(16,212,142,0.12)">📊</span><span>Relatórios</span></a>
+        <a class="shortcut" routerLink="/usuarios"><span class="sc-icon" style="background:rgba(167,139,250,0.15)">👥</span><span>Usuários</span></a>
+      </div>
+    </div>
+
+    <p class="update-info" *ngIf="ultimaAtualizacao">Atualizado às {{ ultimaAtualizacao }}</p>
+  </div>
+</app-layout>
