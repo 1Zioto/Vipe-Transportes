@@ -37,11 +37,17 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.carregarLeaflet().then(() => {
-      this.initMapa();
-      this.carregar();
-      this.refreshInterval = setInterval(() => this.carregar(), 10000);
-      this.geocoderInterval = setInterval(() => this.loopGeocoder(), 60000);
-      this.iniciarScroll();
+      // Aguarda o próximo frame de renderização para garantir que o
+      // #mapa-container já tem dimensões reais no DOM antes do Leaflet inicializar
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          this.initMapa();
+          this.carregar();
+          this.refreshInterval = setInterval(() => this.carregar(), 10000);
+          this.geocoderInterval = setInterval(() => this.loopGeocoder(), 60000);
+          this.iniciarScroll();
+        }, 100);
+      });
     });
   }
 
@@ -76,6 +82,10 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(this.map);
+
+    // Força o Leaflet a recalcular o tamanho real do container
+    // (necessário quando o mapa está dentro de um layout flexbox)
+    setTimeout(() => this.map && this.map.invalidateSize(), 200);
   }
 
   get filtrados(): Veiculo[] {
