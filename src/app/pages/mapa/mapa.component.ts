@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, OnDestroy, AfterViewInit, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../components/layout/layout.component';
@@ -32,21 +32,16 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   private refreshInterval: any;
   private geocoderInterval: any;
   private scrollInterval: any;
+  private resizeObserver: ResizeObserver | null = null;
+  private mapaIniciado = false;
   private scrollY = 0;
   private scrollPausado = false;
 
+  constructor(private zone: NgZone) {}
+
   ngAfterViewInit(): void {
     this.carregarLeaflet().then(() => {
-      // Aguarda o layout flexbox calcular dimensões reais antes de inicializar o Leaflet
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          this.initMapa();
-          this.carregar();
-          this.refreshInterval = setInterval(() => this.carregar(), 10000);
-          this.geocoderInterval = setInterval(() => this.loopGeocoder(), 60000);
-          this.iniciarScroll();
-        }, 100);
-      });
+      this.aguardarContainerComDimensoes();
     });
   }
 
@@ -54,6 +49,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     clearInterval(this.refreshInterval);
     clearInterval(this.geocoderInterval);
     clearInterval(this.scrollInterval);
+    this.resizeObserver?.disconnect();
     if (this.map) { this.map.remove(); this.map = null; }
   }
 
@@ -75,18 +71,52 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  // Usa ResizeObserver para detectar quando o container tem dimensões reais
+  // É muito mais confiável que setTimeout para layouts flex/grid
+  private aguardarContainerComDimensoes(): void {
+    const el = document.getElementById('mapa-container');
+    if (!el) return;
+
+    // Se já tem tamanho, inicializa direto
+    if (el.offsetWidth > 0 && el.offsetHeight > 0) {
+      this.iniciarTudo();
+      return;
+    }
+
+    // Senão, observa até ter dimensões
+    this.resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0 && !this.mapaIniciado) {
+          this.resizeObserver?.disconnect();
+          this.zone.run(() => this.iniciarTudo());
+        }
+      }
+    });
+    this.resizeObserver.observe(el);
+  }
+
+  private iniciarTudo(): void {
+    this.mapaIniciado = true;
+    this.initMapa();
+    this.carregar();
+    this.refreshInterval = setInterval(() => this.carregar(), 10000);
+    this.geocoderInterval = setInterval(() => this.loopGeocoder(), 60000);
+    this.iniciarScroll();
+  }
+
   private initMapa(): void {
     const L = (window as any)['L'];
-    this.map = L.map('mapa-container', { preferCanvas: true }).setView([-20.3, -40.3], 7);
+    const el = document.getElementById('mapa-container')!;
+    
+    this.map = L.map(el, { preferCanvas: true }).setView([-20.3, -40.3], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap'
+      attribution: '© OpenStreetMap',
+      maxZoom: 18
     }).addTo(this.map);
 
-    // Força o Leaflet a recalcular dimensões em múltiplos momentos
-    // para garantir que os tiles carregam independente do timing do CSS
-    [100, 300, 600, 1000].forEach(ms =>
-      setTimeout(() => this.map && this.map.invalidateSize(), ms)
-    );
+    // invalidateSize após render para garantir tiles
+    setTimeout(() => this.map?.invalidateSize(), 50);
   }
 
   get filtrados(): Veiculo[] {

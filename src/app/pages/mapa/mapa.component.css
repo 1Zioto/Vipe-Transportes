@@ -3,14 +3,14 @@
   display: flex;
   flex: 1;
   min-height: 0;
-  height: 100%;
+  /* Ocupa toda a altura disponível no layout */
+  align-self: stretch;
 }
 
 .mapa-shell {
   display: flex;
   flex: 1;
   min-height: 0;
-  height: 100%;
   overflow: hidden;
   position: relative;
 }
@@ -200,7 +200,6 @@
   min-height: 0;
   min-width: 0;
   z-index: 1;
-  /* Garante que o Leaflet sempre receba dimensões reais */
   position: relative;
 }
 
@@ -221,11 +220,10 @@
   border-top-color: rgba(255,215,0,0.4);
 }
 
-/* Mobile: painel vira bottom sheet */
+/* Mobile */
 @media (max-width: 768px) {
   .mapa-shell {
     flex-direction: column-reverse;
-    height: 100vh;
   }
   .mapa-painel {
     width: 100%;
