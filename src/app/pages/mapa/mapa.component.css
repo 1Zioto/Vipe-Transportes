@@ -3,12 +3,14 @@
   display: flex;
   flex: 1;
   min-height: 0;
+  height: 100%;
 }
 
 .mapa-shell {
   display: flex;
   flex: 1;
   min-height: 0;
+  height: calc(100vh - 64px);
   overflow: hidden;
   position: relative;
 }
@@ -195,6 +197,7 @@
 /* ── Mapa ── */
 .mapa-view {
   flex: 1;
+  min-height: 0;
   z-index: 1;
 }
 
@@ -219,6 +222,7 @@
 @media (max-width: 768px) {
   .mapa-shell {
     flex-direction: column-reverse;
+    height: 100vh;
   }
   .mapa-painel {
     width: 100%;
