@@ -37,8 +37,7 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.carregarLeaflet().then(() => {
-      // Aguarda o próximo frame de renderização para garantir que o
-      // #mapa-container já tem dimensões reais no DOM antes do Leaflet inicializar
+      // Aguarda o layout flexbox calcular dimensões reais antes de inicializar o Leaflet
       requestAnimationFrame(() => {
         setTimeout(() => {
           this.initMapa();
@@ -78,14 +77,16 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
 
   private initMapa(): void {
     const L = (window as any)['L'];
-    this.map = L.map('mapa-container').setView([-20.3, -40.3], 7);
+    this.map = L.map('mapa-container', { preferCanvas: true }).setView([-20.3, -40.3], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap'
     }).addTo(this.map);
 
-    // Força o Leaflet a recalcular o tamanho real do container
-    // (necessário quando o mapa está dentro de um layout flexbox)
-    setTimeout(() => this.map && this.map.invalidateSize(), 200);
+    // Força o Leaflet a recalcular dimensões em múltiplos momentos
+    // para garantir que os tiles carregam independente do timing do CSS
+    [100, 300, 600, 1000].forEach(ms =>
+      setTimeout(() => this.map && this.map.invalidateSize(), ms)
+    );
   }
 
   get filtrados(): Veiculo[] {

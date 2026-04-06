@@ -10,7 +10,7 @@
   display: flex;
   flex: 1;
   min-height: 0;
-  height: calc(100vh - 64px);
+  height: 100%;
   overflow: hidden;
   position: relative;
 }
@@ -198,7 +198,10 @@
 .mapa-view {
   flex: 1;
   min-height: 0;
+  min-width: 0;
   z-index: 1;
+  /* Garante que o Leaflet sempre receba dimensões reais */
+  position: relative;
 }
 
 /* Override Leaflet tooltip */

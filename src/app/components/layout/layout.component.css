@@ -36,5 +36,6 @@
 .notif-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--red); border: 1.5px solid var(--navy-mid); }
 .user-mini { width: 32px; height: 32px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
 .content { flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column; }
+.content:has(app-mapa) { overflow: hidden; }
 .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 150; }
 @media (max-width: 900px) { .sidebar { position: fixed; top: 0; left: 0; bottom: 0; transform: translateX(-100%); z-index: 300; box-shadow: var(--shadow-lg); } .sidebar-close { display: flex; } .top-bar { display: flex; } .shell.sidebar-open .sidebar { transform: translateX(0); } .shell.sidebar-open .sidebar-overlay { display: block; } }
